@@ -8,6 +8,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	ginprometheus "github.com/zsais/go-gin-prometheus"
 	"net/http"
 )
 
@@ -42,6 +43,11 @@ func SetupRouter(api *Api) *gin.Engine {
 	router.Use(cors.Default())
 	router.Use(gin.ErrorLogger()) // print all errors
 	router.Use(apiRecovery)       // returns 500 on any code panics
+
+	// metrics
+	p := ginprometheus.NewPrometheus("gin")
+	p.ReqCntURLLabelMappingFn = func(c *gin.Context) string { return "" } // do not save stats for all routes
+	p.Use(router)
 
 	// Default handler 404
 	router.NoRoute(func(c *gin.Context) {
