@@ -1,0 +1,15 @@
+version: 1.0.0
+apiVersion: v2
+
+name: swap-router
+description: A Helm chart for swap-router
+
+appVersion: latest
+
+home: https://github.com/MinterTeam/swap-router
+keywords:
+  - swap-router
+maintainers:
+  - name: tazhate
+    email: taz.inside@gmail.com
+

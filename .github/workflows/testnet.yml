@@ -1,0 +1,42 @@
+name: Swap router
+
+on:
+  push:
+    branches: [ testnet ]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 5
+
+      - name: Build & Push to Docker registry
+        uses: opspresso/action-docker@v0.2.13
+        env:
+          USERNAME: ${{ secrets.MINTER_REGISTRY_USERNAME }}
+          PASSWORD: ${{ secrets.MINTER_REGISTRY_PASSWORD }}
+          REGISTRY: "registry.minter.network"
+          IMAGE_NAME: "swap-router"
+          DOCKERFILE: ".docker/Dockerfile"
+          LATEST: "true"
+          TAG_NAME: ${{ github.sha }}
+
+      - name: deploy to stage
+        uses: wahyd4/kubectl-helm-action@v0.1.2
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_STAGE_CONFIG_DATA }}
+          TAG_NAME: ${{ github.sha }}
+        with:
+          args: helm upgrade -i swap-router chart/ --atomic --timeout 60s --reuse-values --set image.tag=$TAG_NAME
+
+      - name: notification
+        if: cancelled() == false
+        uses: xinthink/action-telegram@v1.1
+        with:
+          botToken: ${{ secrets.TELEGRAM_TOKEN }}
+          chatId: ${{ secrets.TELEGRAM_TO }}
+          jobStatus: ${{ job.status }}
+          skipSuccess: false
