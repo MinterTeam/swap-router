@@ -17,7 +17,7 @@ func Connect(cfg config.DbConfig) *pg.DB {
 		Addr:     cfg.Host,
 		PoolSize: cfg.PoolSize,
 		TLSConfig: &tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: false,
 		},
 	})
 
