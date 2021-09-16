@@ -23,10 +23,12 @@ func main() {
 	coinService := services.NewCoinService(coinRepository)
 
 	wsClient := ws.NewWebSocketClient(cfg.WsConfig.Server)
-	defer wsClient.Close()
-
+	wsSub := wsClient.CreateSubscription("blocks")
+	wsClient.Subscribe(wsSub)
 	blocksListener := ws.NewBlocksChannelHandler()
 	blocksListener.AddSubscriber(poolService)
+	wsSub.OnPublish(blocksListener)
+	defer wsClient.Close()
 
 	api.NewApi(cfg.ApiConfig, swapService, coinService, coinRepository)
 }

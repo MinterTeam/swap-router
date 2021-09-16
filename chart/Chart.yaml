@@ -1,14 +1,14 @@
 version: 1.0.0
 apiVersion: v2
 
-name: swap-router
-description: A Helm chart for swap-router
+name: swap-router-api
+description: A Helm chart for swap-router-api
 
 appVersion: latest
 
 home: https://github.com/MinterTeam/swap-router
 keywords:
-  - swap-router
+  - swap-router-api
 maintainers:
   - name: tazhate
     email: taz.inside@gmail.com
