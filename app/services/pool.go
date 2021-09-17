@@ -54,7 +54,6 @@ func (p *Pool) GetTradePairs() []swap.Pair {
 }
 
 func (p *Pool) ListenNewBlock(b blocks.Resource) {
-	log.Debugf("pool: received new block %d", b.ID)
 	p.updatePools()
 	p.updateTradePairs()
 }

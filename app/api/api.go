@@ -41,7 +41,7 @@ func SetupRouter(api *Api) *gin.Engine {
 	router.Use(gin.Recovery())
 
 	router.Use(cors.Default())
-	router.Use(gin.Logger())
+	//router.Use(gin.Logger())
 	router.Use(gin.ErrorLogger()) // print all errors
 	router.Use(apiRecovery)       // returns 500 on any code panics
 
