@@ -14,6 +14,9 @@ func (api *Api) Status(c *gin.Context) {
 }
 
 func (api *Api) FindSwapRoute(c *gin.Context) {
+	rlog := newRequestLogger(c)
+	rlog.Debug("router: handler start")
+
 	var req FindSwapPoolRouteRequest
 	if err := c.ShouldBindUri(&req); err != nil {
 		validationErrorResponse(err, c)
@@ -37,17 +40,23 @@ func (api *Api) FindSwapRoute(c *gin.Context) {
 		return
 	}
 
+	rlog.Debug("router: coins found")
+
 	trade, err := api.swapService.FindRoute(fromCoinId, toCoinId, reqQuery.GetTradeType(), reqQuery.GetAmount())
 	if err != nil {
 		errorResponse(http.StatusNotFound, "Route path not exists.", c)
 		return
 	}
 
+	rlog.Debug("router: trade found")
+
 	path := make([]models.Coin, len(trade.Route.Path))
 	for i, t := range trade.Route.Path {
 		coin := api.coinService.GetCoinById(t.CoinID)
 		path[i] = coin
 	}
+
+	rlog.Debug("router: result created")
 
 	c.JSON(http.StatusOK, new(resources.Route).Transform(path, trade))
 }

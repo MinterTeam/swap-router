@@ -8,10 +8,18 @@ import (
 	"github.com/MinterTeam/swap-router/app/services"
 	"github.com/MinterTeam/swap-router/app/ws"
 	log "github.com/sirupsen/logrus"
+	"os"
+	"time"
 )
 
 func main() {
+	// Init Logger
+	log.SetOutput(os.Stdout)
 	log.SetLevel(log.DebugLevel)
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: time.RFC3339Nano,
+	})
 
 	cfg := config.Load()
 	db := database.Connect(cfg.DbConfig)
