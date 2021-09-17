@@ -53,7 +53,8 @@ func (p *Pool) GetTradePairs() []swap.Pair {
 	return p.tradePairs
 }
 
-func (p *Pool) ListenNewBlock(blocks.Resource) {
+func (p *Pool) ListenNewBlock(b blocks.Resource) {
+	log.Debugf("pool: received new block %d", b.ID)
 	p.updatePools()
 	p.updateTradePairs()
 }

@@ -8,9 +8,10 @@ import (
 )
 
 type Config struct {
-	DbConfig  DbConfig
-	ApiConfig ApiConfig
-	WsConfig  WsConfig
+	DbConfig      DbConfig
+	ApiConfig     ApiConfig
+	WsConfig      WsConfig
+	WorkersConfig WorkersConfig
 }
 
 type DbConfig struct {
@@ -29,6 +30,10 @@ type WsConfig struct {
 	Server string
 }
 
+type WorkersConfig struct {
+	FindRouteWorkersCount int
+}
+
 func Load() *Config {
 	if err := godotenv.Load(); err != nil {
 		log.Warn(".env file not found")
@@ -36,6 +41,7 @@ func Load() *Config {
 
 	serverPort, _ := strconv.ParseUint(os.Getenv("SERVER_PORT"), 10, 64)
 	poolSize, _ := strconv.Atoi(os.Getenv("DB_POOL_SIZE"))
+	findRouteWorkersCount, _ := strconv.Atoi(os.Getenv("FIND_ROUTE_WORKERS_COUNT"))
 
 	return &Config{
 		DbConfig: DbConfig{
@@ -50,6 +56,9 @@ func Load() *Config {
 		},
 		WsConfig: WsConfig{
 			Server: os.Getenv("WS_SERVER"),
+		},
+		WorkersConfig: WorkersConfig{
+			FindRouteWorkersCount: findRouteWorkersCount,
 		},
 	}
 }

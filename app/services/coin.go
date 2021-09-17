@@ -4,6 +4,7 @@ import (
 	"github.com/MinterTeam/minter-explorer-api/v2/blocks"
 	"github.com/MinterTeam/minter-explorer-extender/v2/models"
 	"github.com/MinterTeam/swap-router/app/repositories"
+	log "github.com/sirupsen/logrus"
 	"sync"
 )
 
@@ -24,7 +25,8 @@ func (c *Coin) GetCoinById(id uint64) models.Coin {
 	return coin.(models.Coin)
 }
 
-func (c *Coin) ListenNewBlock(blocks.Resource) {
+func (c *Coin) ListenNewBlock(b blocks.Resource) {
+	log.Debugf("coin: received new block %d", b.ID)
 	c.fillCoinsMap()
 }
 

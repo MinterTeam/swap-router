@@ -18,7 +18,7 @@ func main() {
 
 	poolRepository := repositories.NewPoolRepository(db)
 	poolService := services.NewPoolService(poolRepository)
-	swapService := services.NewSwapService(poolService)
+	swapService := services.NewSwapService(cfg.WorkersConfig, poolService)
 	coinRepository := repositories.NewCoinRepository(db)
 	coinService := services.NewCoinService(coinRepository)
 
@@ -27,6 +27,7 @@ func main() {
 	wsClient.Subscribe(wsSub)
 	blocksListener := ws.NewBlocksChannelHandler()
 	blocksListener.AddSubscriber(poolService)
+	blocksListener.AddSubscriber(coinService)
 	wsSub.OnPublish(blocksListener)
 	defer wsClient.Close()
 
