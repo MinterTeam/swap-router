@@ -14,9 +14,6 @@ import (
 )
 
 func main() {
-	log.Debugf("num of cpu: %d", runtime.NumCPU())
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
 	// Init Logger
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.DebugLevel)
@@ -24,6 +21,9 @@ func main() {
 		FullTimestamp:   true,
 		TimestampFormat: time.RFC3339Nano,
 	})
+
+	log.Debugf("num of cpu: %d", runtime.NumCPU())
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	cfg := config.Load()
 	db := database.Connect(cfg.DbConfig)
