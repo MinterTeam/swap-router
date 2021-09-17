@@ -9,10 +9,14 @@ import (
 	"github.com/MinterTeam/swap-router/app/ws"
 	log "github.com/sirupsen/logrus"
 	"os"
+	"runtime"
 	"time"
 )
 
 func main() {
+	log.Debugf("num of cpu: %d", runtime.NumCPU())
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	// Init Logger
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.DebugLevel)
