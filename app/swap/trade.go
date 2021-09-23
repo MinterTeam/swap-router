@@ -1,6 +1,8 @@
 package swap
 
 import (
+	"github.com/MinterTeam/minter-explorer-api/v2/helpers"
+	"github.com/ethereum/go-ethereum/params"
 	"math/big"
 )
 
@@ -12,11 +14,11 @@ const (
 )
 
 type Trade struct {
-	Route          Route
-	TradeType      TradeType
-	InputAmount    TokenAmount
-	OutputAmount   TokenAmount
-	PriceImpact    *big.Int
+	Route        Route
+	TradeType    TradeType
+	InputAmount  TokenAmount
+	OutputAmount TokenAmount
+	PriceImpact  *big.Int
 }
 
 func NewTrade(route Route, amount TokenAmount, tradeType TradeType) (*Trade, error) {
@@ -55,11 +57,27 @@ func NewTrade(route Route, amount TokenAmount, tradeType TradeType) (*Trade, err
 	}
 
 	return &Trade{
-		Route:          route,
-		TradeType:      tradeType,
-		InputAmount:    inputAmount,
-		OutputAmount:   outputAmount,
+		Route:        route,
+		TradeType:    tradeType,
+		InputAmount:  inputAmount,
+		OutputAmount: outputAmount,
+		PriceImpact:  computePriceImpact(route.MidPrice, inputAmount, outputAmount),
 	}, nil
+}
+
+func computePriceImpact(midPrice Price, inputAmount TokenAmount, outputAmount TokenAmount) *big.Int {
+	mid := helpers.Pip2Bip(midPrice.Value)
+	input := helpers.Pip2Bip(inputAmount.GetAmount())
+	output := helpers.Pip2Bip(outputAmount.GetAmount())
+
+	exactQuote := new(big.Float).Mul(mid, input)
+	numerator := new(big.Float).Sub(exactQuote, output)
+	slippage := new(big.Float).Quo(numerator, exactQuote)
+
+	wei := new(big.Int)
+	new(big.Float).Mul(slippage, big.NewFloat(params.Ether)).Int(wei)
+
+	return wei
 }
 
 func (t *Trade) GetMaximumAmountIn(slippageTolerance float64) TokenAmount {
@@ -136,20 +154,20 @@ func tradeComparator(tradeA, tradeB *Trade) bool {
 	return true
 }
 
-func GetBestTradeExactIn(pairs []*PairTrade, currencyOut Token, currencyAmountIn TokenAmount, options TradeOptions) (*Trade, error) {
-	return getBestTradeExactIn(pairs, currencyOut, currencyAmountIn, options, make([]*PairTrade, 0), currencyAmountIn, nil)
+func GetBestTradeExactIn(pairs []*PairTrade, currencyOut Token, currencyAmountIn TokenAmount, maxHops int) (*Trade, error) {
+	return getBestTradeExactIn(pairs, currencyOut, currencyAmountIn, maxHops, make([]*PairTrade, 0), currencyAmountIn, nil)
 }
 
 func getBestTradeExactIn(
 	pairs []*PairTrade,
 	currencyOut Token,
 	currencyAmountIn TokenAmount,
-	tradeOptions TradeOptions,
+	maxHops int,
 	currentPairs []*PairTrade,
 	originalAmountIn TokenAmount,
 	bestTrade *Trade,
 ) (*Trade, error) {
-	if tradeOptions.MaxHops <= 0 {
+	if maxHops <= 0 {
 		return bestTrade, nil
 	}
 
@@ -187,7 +205,7 @@ func getBestTradeExactIn(
 			if bestTrade == nil || tradeComparator(bestTrade, trade) {
 				bestTrade = trade
 			}
-		} else if tradeOptions.MaxHops > 1 && len(pairs) > 1 {
+		} else if maxHops > 1 && len(pairs) > 1 {
 			// otherwise, consider all the other paths that lead from this token as long as we have not exceeded maxHops
 			temp := make([]*PairTrade, len(pairs))
 			copy(temp, pairs)
@@ -195,14 +213,13 @@ func getBestTradeExactIn(
 			pairsExcludingThisPair := temp[:len(temp)-1]
 
 			newCurrentPairs := append(currentPairs, pair)
-			newTradeOptions := TradeOptions{tradeOptions.MaxNumResults, tradeOptions.MaxHops - 1}
 
 			var err error
 			bestTrade, err = getBestTradeExactIn(
 				pairsExcludingThisPair,
 				currencyOut,
 				amountOut,
-				newTradeOptions,
+				maxHops-1,
 				newCurrentPairs,
 				originalAmountIn,
 				bestTrade,
@@ -217,20 +234,20 @@ func getBestTradeExactIn(
 	return bestTrade, nil
 }
 
-func GetBestTradeExactOut(pairs []*PairTrade, currencyIn Token, amountOut TokenAmount, options TradeOptions) (*Trade, error) {
-	return getBestTradeExactOut(pairs, currencyIn, amountOut, options, make([]*PairTrade, 0), amountOut, nil)
+func GetBestTradeExactOut(pairs []*PairTrade, currencyIn Token, amountOut TokenAmount, maxhops int) (*Trade, error) {
+	return getBestTradeExactOut(pairs, currencyIn, amountOut, maxhops, make([]*PairTrade, 0), amountOut, nil)
 }
 
 func getBestTradeExactOut(
 	pairs []*PairTrade,
 	currencyIn Token,
 	currencyAmountOut TokenAmount,
-	tradeOptions TradeOptions,
+	maxHops int,
 	currentPairs []*PairTrade,
 	originalAmountOut TokenAmount,
 	bestTrade *Trade,
 ) (*Trade, error) {
-	if tradeOptions.MaxHops <= 0 {
+	if maxHops <= 0 {
 		return bestTrade, nil
 	}
 
@@ -268,22 +285,21 @@ func getBestTradeExactOut(
 			if bestTrade == nil || tradeComparator(bestTrade, trade) {
 				bestTrade = trade
 			}
-		} else if tradeOptions.MaxHops > 1 && len(pairs) > 1 {
+		} else if maxHops > 1 && len(pairs) > 1 {
 			// otherwise, consider all the other paths that lead from this token as long as we have not exceeded maxHops
 			temp := make([]*PairTrade, len(pairs))
 			copy(temp, pairs)
 			temp[i] = temp[len(temp)-1]
 			pairsExcludingThisPair := temp[:len(temp)-1]
-			
+
 			newCurrentPairs := append([]*PairTrade{pair}, currentPairs...)
-			newTradeOptions := TradeOptions{tradeOptions.MaxNumResults, tradeOptions.MaxHops - 1}
 
 			var err error
 			bestTrade, err = getBestTradeExactOut(
 				pairsExcludingThisPair,
 				currencyIn,
 				amountIn,
-				newTradeOptions,
+				maxHops-1,
 				newCurrentPairs,
 				originalAmountOut,
 				bestTrade,

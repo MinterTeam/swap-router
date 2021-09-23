@@ -9,14 +9,16 @@ type Route struct {
 }
 
 func NewRoute(pairs []*PairTrade, input Token, output *Token) Route {
-	path := []Token{input}
+	path := make([]Token, len(pairs) + 1)
+	path[0] = input
+
 	for i, pair := range pairs {
 		currentInput, currentOutput := path[i], pair.Token0
 		if currentInput.IsEqual(pair.Token0.Token) {
 			currentOutput = pair.Token1
 		}
 
-		path = append(path, currentOutput.Token)
+		path[i+1] = currentOutput.Token
 	}
 
 	if output == nil {
