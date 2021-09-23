@@ -1,14 +1,14 @@
 package swap
 
 type Route struct {
-	Pairs    []Pair
+	Pairs    []*PairTrade
 	Path     []Token
 	Input    Token
 	Output   Token
 	MidPrice Price
 }
 
-func NewRoute(pairs []Pair, input Token, output *Token) Route {
+func NewRoute(pairs []*PairTrade, input Token, output *Token) Route {
 	path := []Token{input}
 	for i, pair := range pairs {
 		currentInput, currentOutput := path[i], pair.Token0

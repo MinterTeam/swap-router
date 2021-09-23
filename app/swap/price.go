@@ -1,7 +1,6 @@
 package swap
 
 import (
-	"github.com/ethereum/go-ethereum/params"
 	"math/big"
 )
 
@@ -13,7 +12,7 @@ type Price struct {
 
 func NewPrice(baseToken Token, quoteToken Token, denominator *big.Int, numerator *big.Int) Price {
 	wei, value := new(big.Int), new(big.Float).Quo(new(big.Float).SetInt(numerator), new(big.Float).SetInt(denominator))
-	new(big.Float).Mul(value, big.NewFloat(params.Ether)).Int(wei)
+	new(big.Float).Mul(value, big.NewFloat(1e18)).Int(wei)
 
 	return Price{
 		BaseToken:  baseToken,

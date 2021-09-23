@@ -8,7 +8,7 @@ type TokenAmount struct {
 }
 
 func NewTokenAmount(token Token, amount *big.Int) TokenAmount {
-	return TokenAmount{token, amount}
+	return TokenAmount{Token: token, Amount: amount}
 }
 
 func (ta TokenAmount) GetAmount() *big.Int {

@@ -5,21 +5,23 @@ import (
 	"math/big"
 )
 
-type Pair struct {
+var ErrInsufficientReserve = errors.New("insufficient reserve")
+
+type PairTrade struct {
 	Token0 TokenAmount
 	Token1 TokenAmount
 }
 
-func NewPair(tokenAmountA TokenAmount, tokenAmountB TokenAmount) Pair {
-	return Pair{
+func NewPair(tokenAmountA TokenAmount, tokenAmountB TokenAmount) *PairTrade {
+	return &PairTrade{
 		Token0: tokenAmountA,
 		Token1: tokenAmountB,
 	}
 }
 
-func (p Pair) GetOutputAmount(inputAmount TokenAmount) (TokenAmount, Pair, error) {
+func (p PairTrade) GetOutputAmount(inputAmount TokenAmount) (TokenAmount, *PairTrade, error) {
 	if p.getReserve0().Cmp(big.NewInt(0)) == 0 || p.getReserve1().Cmp(big.NewInt(0)) == 0 {
-		return TokenAmount{}, Pair{}, errors.New("insufficient reserve")
+		return TokenAmount{}, nil, ErrInsufficientReserve
 	}
 
 	inputReserve := p.getReserveOf(inputAmount.Token)
@@ -40,9 +42,9 @@ func (p Pair) GetOutputAmount(inputAmount TokenAmount) (TokenAmount, Pair, error
 	return outputAmount, NewPair(inputReserve.add(inputAmount), outputReserve.sub(outputAmount)), nil
 }
 
-func (p Pair) GetInputAmount(outputAmount TokenAmount) (TokenAmount, Pair, error) {
+func (p PairTrade) GetInputAmount(outputAmount TokenAmount) (TokenAmount, *PairTrade, error) {
 	if p.getReserve0().Cmp(big.NewInt(0)) == 0 || p.getReserve1().Cmp(big.NewInt(0)) == 0 || p.getReserveOf(outputAmount.Token).Amount.Cmp(outputAmount.Amount) == -1 {
-		return TokenAmount{}, Pair{}, errors.New("insufficient reserve")
+		return TokenAmount{}, nil, ErrInsufficientReserve
 	}
 
 	outputReserve := p.getReserveOf(outputAmount.Token)
@@ -67,15 +69,15 @@ func (p Pair) GetInputAmount(outputAmount TokenAmount) (TokenAmount, Pair, error
 	return inputAmount, NewPair(inputReserve.add(inputAmount), outputReserve.sub(outputAmount)), nil
 }
 
-func (p Pair) getReserve0() *big.Int {
+func (p PairTrade) getReserve0() *big.Int {
 	return p.Token0.Amount
 }
 
-func (p Pair) getReserve1() *big.Int {
+func (p PairTrade) getReserve1() *big.Int {
 	return p.Token1.Amount
 }
 
-func (p Pair) getReserveOf(token Token) TokenAmount {
+func (p PairTrade) getReserveOf(token Token) TokenAmount {
 	if p.Token0.Token.IsEqual(token) {
 		return p.Token0
 	}

@@ -13,7 +13,7 @@ type Pool struct {
 	repository *repositories.Pool
 
 	pools      []models.LiquidityPool
-	tradePairs []swap.Pair
+	tradePairs []*swap.PairTrade
 }
 
 func NewPoolService(r *repositories.Pool) *Pool {
@@ -34,7 +34,7 @@ func (p *Pool) updatePools() {
 }
 
 func (p *Pool) updateTradePairs() {
-	pairs := make([]swap.Pair, len(p.pools))
+	pairs := make([]*swap.PairTrade, len(p.pools))
 	for i, pool := range p.pools {
 		pairs[i] = swap.NewPair(
 			swap.NewTokenAmount(swap.NewToken(pool.FirstCoinId), helpers.Str2BigInt(pool.FirstCoinVolume)),
@@ -49,7 +49,7 @@ func (p *Pool) GetPools() []models.LiquidityPool {
 	return p.pools
 }
 
-func (p *Pool) GetTradePairs() []swap.Pair {
+func (p *Pool) GetTradePairs() []*swap.PairTrade {
 	return p.tradePairs
 }
 

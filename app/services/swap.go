@@ -57,7 +57,7 @@ func (s *Swap) findRoute(fromCoinId uint64, toCoinId uint64, tradeType swap.Trad
 }
 
 func (s *Swap) FindRoute(fromCoinId uint64, toCoinId uint64, tradeType swap.TradeType, amount *big.Int) (trade *swap.Trade, err error) {
-	pairs, trades := s.poolService.GetTradePairs(), []swap.Trade{}
+	pairs, trades := s.poolService.GetTradePairs(), []*swap.Trade{}
 	if tradeType == swap.TradeTypeExactInput {
 		trades, err = swap.GetBestTradeExactIn(pairs, swap.NewToken(toCoinId), swap.NewTokenAmount(swap.NewToken(fromCoinId), amount),
 			swap.TradeOptions{MaxNumResults: 1, MaxHops: 4})
@@ -74,5 +74,5 @@ func (s *Swap) FindRoute(fromCoinId uint64, toCoinId uint64, tradeType swap.Trad
 		return nil, errors.New("path not found")
 	}
 
-	return &trades[0], nil
+	return trades[0], nil
 }
