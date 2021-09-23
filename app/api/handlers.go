@@ -30,12 +30,14 @@ func (api *Api) FindSwapRoute(c *gin.Context) {
 	}
 
 	if req.Coin0 == req.Coin1 {
+		rlog.Debug("router: coins are equal")
 		errorResponse(http.StatusNotFound, "Route path not exists.", c)
 		return
 	}
 
 	fromCoinId, toCoinId, err := api.getCoinsFromRequest(req)
 	if err != nil {
+		rlog.Debug("router: coins are not found")
 		errorResponse(http.StatusNotFound, err.Error(), c)
 		return
 	}
