@@ -2,7 +2,6 @@ package swap
 
 import (
 	"math/big"
-	"sort"
 )
 
 type TradeType int
@@ -17,17 +16,8 @@ type Trade struct {
 	TradeType      TradeType
 	InputAmount    TokenAmount
 	OutputAmount   TokenAmount
-	ExecutionPrice Price
-	NextMidPrice   Price
 	PriceImpact    *big.Int
-	Profit         *big.Int
 }
-
-type TradeCollection []*Trade
-
-func (t TradeCollection) Len() int           { return len(t) }
-func (t TradeCollection) Swap(i, j int)      { t[i], t[j] = t[j], t[i] }
-func (t TradeCollection) Less(i, j int) bool { return tradeComparator(t[i], t[j]) }
 
 func NewTrade(route Route, amount TokenAmount, tradeType TradeType) (*Trade, error) {
 	amounts := make([]TokenAmount, len(route.Path))
@@ -69,9 +59,6 @@ func NewTrade(route Route, amount TokenAmount, tradeType TradeType) (*Trade, err
 		TradeType:      tradeType,
 		InputAmount:    inputAmount,
 		OutputAmount:   outputAmount,
-		ExecutionPrice: NewPrice(inputAmount.GetCurrency(), outputAmount.GetCurrency(), inputAmount.GetAmount(), outputAmount.GetAmount()),
-		NextMidPrice:   NewPriceFromRoute(NewRoute(nextPairs, route.Input, nil)),
-		Profit:         big.NewInt(0).Sub(outputAmount.GetAmount(), inputAmount.GetAmount()),
 	}, nil
 }
 
@@ -149,12 +136,8 @@ func tradeComparator(tradeA, tradeB *Trade) bool {
 	return true
 }
 
-func GetBestTradeExactIn(pairs []*PairTrade, currencyOut Token, currencyAmountIn TokenAmount, options TradeOptions) ([]*Trade, error) {
-	if options.MaxHops <= 0 {
-		return nil, nil
-	}
-
-	return getBestTradeExactIn(pairs, currencyOut, currencyAmountIn, options, make([]*PairTrade, 0), currencyAmountIn)
+func GetBestTradeExactIn(pairs []*PairTrade, currencyOut Token, currencyAmountIn TokenAmount, options TradeOptions) (*Trade, error) {
+	return getBestTradeExactIn(pairs, currencyOut, currencyAmountIn, options, make([]*PairTrade, 0), currencyAmountIn, nil)
 }
 
 func getBestTradeExactIn(
@@ -164,10 +147,10 @@ func getBestTradeExactIn(
 	tradeOptions TradeOptions,
 	currentPairs []*PairTrade,
 	originalAmountIn TokenAmount,
-	bestTrades ...*Trade,
-) ([]*Trade, error) {
+	bestTrade *Trade,
+) (*Trade, error) {
 	if tradeOptions.MaxHops <= 0 {
-		return bestTrades, nil
+		return bestTrade, nil
 	}
 
 	tokenOut, tokenAmountIn := currencyOut, currencyAmountIn
@@ -186,7 +169,7 @@ func getBestTradeExactIn(
 			if err == ErrInsufficientReserve {
 				continue
 			}
-			return bestTrades, err
+			return bestTrade, err
 		}
 
 		// we have arrived at the output token, so this is the final trade of one of the paths
@@ -201,27 +184,28 @@ func getBestTradeExactIn(
 				continue
 			}
 
-			bestTrades = append(bestTrades, trade)
-			sort.Sort(sort.Reverse(TradeCollection(bestTrades)))
-
-			if len(bestTrades) > tradeOptions.MaxNumResults {
-				bestTrades = (bestTrades)[:tradeOptions.MaxNumResults]
+			if bestTrade == nil || tradeComparator(bestTrade, trade) {
+				bestTrade = trade
 			}
 		} else if tradeOptions.MaxHops > 1 && len(pairs) > 1 {
 			// otherwise, consider all the other paths that lead from this token as long as we have not exceeded maxHops
-			pairsExcludingThisPair := append(append([]*PairTrade{}, pairs[:i]...), pairs[i+1:]...)
+			temp := make([]*PairTrade, len(pairs))
+			copy(temp, pairs)
+			temp[i] = temp[len(temp)-1]
+			pairsExcludingThisPair := temp[:len(temp)-1]
+
 			newCurrentPairs := append(currentPairs, pair)
 			newTradeOptions := TradeOptions{tradeOptions.MaxNumResults, tradeOptions.MaxHops - 1}
 
 			var err error
-			bestTrades, err = getBestTradeExactIn(
+			bestTrade, err = getBestTradeExactIn(
 				pairsExcludingThisPair,
 				currencyOut,
 				amountOut,
 				newTradeOptions,
 				newCurrentPairs,
 				originalAmountIn,
-				bestTrades...,
+				bestTrade,
 			)
 
 			if err != nil {
@@ -230,15 +214,11 @@ func getBestTradeExactIn(
 		}
 	}
 
-	return bestTrades, nil
+	return bestTrade, nil
 }
 
-func GetBestTradeExactOut(pairs []*PairTrade, currencyIn Token, amountOut TokenAmount, options TradeOptions) ([]*Trade, error) {
-	if options.MaxHops <= 0 {
-		return nil, nil
-	}
-
-	return getBestTradeExactOut(pairs, currencyIn, amountOut, options, make([]*PairTrade, 0), amountOut)
+func GetBestTradeExactOut(pairs []*PairTrade, currencyIn Token, amountOut TokenAmount, options TradeOptions) (*Trade, error) {
+	return getBestTradeExactOut(pairs, currencyIn, amountOut, options, make([]*PairTrade, 0), amountOut, nil)
 }
 
 func getBestTradeExactOut(
@@ -248,10 +228,10 @@ func getBestTradeExactOut(
 	tradeOptions TradeOptions,
 	currentPairs []*PairTrade,
 	originalAmountOut TokenAmount,
-	bestTrades ...*Trade,
-) ([]*Trade, error) {
+	bestTrade *Trade,
+) (*Trade, error) {
 	if tradeOptions.MaxHops <= 0 {
-		return bestTrades, nil
+		return bestTrade, nil
 	}
 
 	tokenIn, amountOut, currencyOut := currencyIn, currencyAmountOut, originalAmountOut.GetCurrency()
@@ -285,27 +265,28 @@ func getBestTradeExactOut(
 				continue
 			}
 
-			bestTrades = append(bestTrades, trade)
-			sort.Sort(sort.Reverse(TradeCollection(bestTrades)))
-
-			if len(bestTrades) > tradeOptions.MaxNumResults {
-				bestTrades = (bestTrades)[:tradeOptions.MaxNumResults]
+			if bestTrade == nil || tradeComparator(bestTrade, trade) {
+				bestTrade = trade
 			}
 		} else if tradeOptions.MaxHops > 1 && len(pairs) > 1 {
 			// otherwise, consider all the other paths that lead from this token as long as we have not exceeded maxHops
-			pairsExcludingThisPair := append(append([]*PairTrade{}, pairs[:i]...), pairs[i+1:]...)
+			temp := make([]*PairTrade, len(pairs))
+			copy(temp, pairs)
+			temp[i] = temp[len(temp)-1]
+			pairsExcludingThisPair := temp[:len(temp)-1]
+			
 			newCurrentPairs := append([]*PairTrade{pair}, currentPairs...)
 			newTradeOptions := TradeOptions{tradeOptions.MaxNumResults, tradeOptions.MaxHops - 1}
 
 			var err error
-			bestTrades, err = getBestTradeExactOut(
+			bestTrade, err = getBestTradeExactOut(
 				pairsExcludingThisPair,
 				currencyIn,
 				amountIn,
 				newTradeOptions,
 				newCurrentPairs,
 				originalAmountOut,
-				bestTrades...,
+				bestTrade,
 			)
 
 			if err != nil {
@@ -314,5 +295,5 @@ func getBestTradeExactOut(
 		}
 	}
 
-	return bestTrades, nil
+	return bestTrade, nil
 }
