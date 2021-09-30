@@ -43,5 +43,5 @@ func main() {
 	wsSub.OnPublish(blocksListener)
 	defer wsClient.Close()
 
-	api.NewApi(cfg.ApiConfig, swapService, coinService, coinRepository)
+	api.NewApi(cfg.ApiConfig, swapService, coinService)
 }

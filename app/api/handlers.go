@@ -1,7 +1,6 @@
 package api
 
 import (
-	"errors"
 	"github.com/MinterTeam/minter-explorer-extender/v2/models"
 	"github.com/MinterTeam/swap-router/app/resources"
 	"github.com/gin-gonic/gin"
@@ -67,16 +66,16 @@ func (api *Api) getCoinsFromRequest(req FindSwapPoolRouteRequest) (fromCoinId, t
 	if id, err := strconv.ParseUint(req.Coin0, 10, 64); err == nil {
 		fromCoinId = id
 	} else {
-		if fromCoinId, err = api.coinRepository.FindIdBySymbol(req.Coin0); err != nil {
-			return fromCoinId, toCoinId, errors.New("path not found")
+		if fromCoinId, err = api.coinService.GetCoinIdBySymbol(req.Coin0); err != nil {
+			return fromCoinId, toCoinId, err
 		}
 	}
 
 	if id, err := strconv.ParseUint(req.Coin1, 10, 64); err == nil {
 		toCoinId = id
 	} else {
-		if toCoinId, err = api.coinRepository.FindIdBySymbol(req.Coin1); err != nil {
-			return fromCoinId, toCoinId, errors.New("path not found")
+		if toCoinId, err = api.coinService.GetCoinIdBySymbol(req.Coin1); err != nil {
+			return fromCoinId, toCoinId, err
 		}
 	}
 

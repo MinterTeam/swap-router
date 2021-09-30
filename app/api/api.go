@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"github.com/MinterTeam/swap-router/app/config"
-	"github.com/MinterTeam/swap-router/app/repositories"
 	"github.com/MinterTeam/swap-router/app/services"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -13,16 +12,14 @@ import (
 )
 
 type Api struct {
-	swapService    *services.Swap
-	coinService    *services.Coin
-	coinRepository *repositories.Coin
+	swapService *services.Swap
+	coinService *services.Coin
 }
 
-func NewApi(cfg config.ApiConfig, ss *services.Swap, cc *services.Coin, cp *repositories.Coin) *Api {
+func NewApi(cfg config.ApiConfig, ss *services.Swap, cc *services.Coin) *Api {
 	api := &Api{
-		swapService:    ss,
-		coinService:    cc,
-		coinRepository: cp,
+		swapService: ss,
+		coinService: cc,
 	}
 
 	router := SetupRouter(api)
