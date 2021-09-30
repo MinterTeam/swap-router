@@ -37,8 +37,8 @@ func (p *Pool) updateTradePairs() {
 	pairs := make([]*swap.PairTrade, len(p.pools))
 	for i, pool := range p.pools {
 		pairs[i] = swap.NewPair(
-			swap.NewTokenAmount(swap.NewToken(pool.FirstCoinId), helpers.Str2BigInt(pool.FirstCoinVolume)),
-			swap.NewTokenAmount(swap.NewToken(pool.SecondCoinId), helpers.Str2BigInt(pool.SecondCoinVolume)),
+			swap.NewTokenAmount(swap.NewToken(pool.FirstCoinId), helpers.PipStr2Bip(pool.FirstCoinVolume)),
+			swap.NewTokenAmount(swap.NewToken(pool.SecondCoinId), helpers.PipStr2Bip(pool.SecondCoinVolume)),
 		)
 	}
 

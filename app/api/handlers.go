@@ -43,7 +43,7 @@ func (api *Api) FindSwapRoute(c *gin.Context) {
 
 	rlog.Debug("router: coins found")
 
-	trade, err := api.swapService.FindRoute(fromCoinId, toCoinId, reqQuery.GetTradeType(), reqQuery.GetAmount())
+	trade, err := api.swapService.FindRoute(fromCoinId, toCoinId, reqQuery.GetTradeType(), reqQuery.Amount)
 	if err != nil {
 		errorResponse(http.StatusNotFound, "Route path not exists.", c)
 		return

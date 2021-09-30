@@ -1,9 +1,5 @@
 package swap
 
-import (
-	"math/big"
-)
-
 type TradeType int
 
 const (
@@ -48,7 +44,7 @@ func NewTrade(route Route, amount TokenAmount, tradeType TradeType) (*Trade, err
 		outputAmount, inputAmount = amount, amounts[0]
 	}
 
-	if inputAmount.Amount.Cmp(big.NewInt(0)) == 0 || outputAmount.Amount.Cmp(big.NewInt(0)) == 0 {
+	if inputAmount.Amount <= 0 || outputAmount.Amount <= 0 {
 		return nil, ErrInsufficientReserve
 	}
 
@@ -61,20 +57,20 @@ func NewTrade(route Route, amount TokenAmount, tradeType TradeType) (*Trade, err
 }
 
 func inputOutputComparator(tradeA, tradeB *Trade) int {
-	if tradeA.OutputAmount.GetAmount().Cmp(tradeB.OutputAmount.GetAmount()) == 0 {
-		if tradeA.InputAmount.GetAmount().Cmp(tradeB.InputAmount.GetAmount()) == 0 {
+	if tradeA.OutputAmount.GetAmount() == tradeB.OutputAmount.GetAmount() {
+		if tradeA.InputAmount.GetAmount() == tradeB.InputAmount.GetAmount() {
 			return 0
 		}
 
 		// trade A requires less input than trade B, so A should come first
-		if tradeA.InputAmount.GetAmount().Cmp(tradeB.InputAmount.GetAmount()) == -1 {
+		if tradeA.InputAmount.GetAmount() < tradeB.InputAmount.GetAmount() {
 			return -1
 		} else {
 			return 1
 		}
 	} else {
 		// tradeA has less output than trade B, so should come second
-		if tradeA.OutputAmount.GetAmount().Cmp(tradeB.OutputAmount.GetAmount()) == -1 {
+		if tradeA.OutputAmount.GetAmount() < tradeB.OutputAmount.GetAmount() {
 			return 1
 		} else {
 			return -1
@@ -120,7 +116,7 @@ func getBestTradeExactIn(
 			continue
 		}
 
-		if pair.getReserve0().Sign() == 0 || pair.getReserve1().Sign() == 0 {
+		if pair.getReserve0() <= 0 || pair.getReserve1() <= 0 {
 			continue
 		}
 
@@ -200,7 +196,7 @@ func getBestTradeExactOut(
 			continue
 		}
 
-		if pair.getReserve0().Cmp(big.NewInt(0)) == 0 || pair.getReserve1().Cmp(big.NewInt(0)) == 0 {
+		if pair.getReserve0() <= 0 || pair.getReserve1() <= 0 {
 			continue
 		}
 

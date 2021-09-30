@@ -1,17 +1,15 @@
 package swap
 
-import "math/big"
-
 type TokenAmount struct {
 	Token  Token
-	Amount *big.Int
+	Amount float64
 }
 
-func NewTokenAmount(token Token, amount *big.Int) TokenAmount {
+func NewTokenAmount(token Token, amount float64) TokenAmount {
 	return TokenAmount{Token: token, Amount: amount}
 }
 
-func (ta TokenAmount) GetAmount() *big.Int {
+func (ta TokenAmount) GetAmount() float64 {
 	return ta.Amount
 }
 
