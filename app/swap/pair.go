@@ -41,7 +41,7 @@ func (p PairTrade) GetOutputAmount(inputAmount TokenAmount) (TokenAmount, error)
 
 	outputAmount := TokenAmount{
 		Token:  outputReserve.Token,
-		Amount: new(big.Int).Div(numerator, denominator),
+		Amount: numerator.Quo(numerator, denominator),
 	}
 
 	return outputAmount, nil
