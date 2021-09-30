@@ -23,30 +23,29 @@ type Trade struct {
 
 func NewTrade(route Route, amount TokenAmount, tradeType TradeType) (*Trade, error) {
 	amounts := make([]TokenAmount, len(route.Path))
-	nextPairs := make([]*PairTrade, len(route.Pairs))
 
 	var inputAmount, outputAmount TokenAmount
 	if tradeType == TradeTypeExactInput {
 		amounts[0] = amount
 		for i := 0; i < len(route.Path)-1; i++ {
-			tokenAmount, nextPair, err := route.Pairs[i].GetOutputAmount(amounts[i])
+			tokenAmount, err := route.Pairs[i].GetOutputAmount(amounts[i])
 			if err != nil {
 				return nil, err
 			}
 
-			amounts[i+1], nextPairs[i] = tokenAmount, nextPair
+			amounts[i+1] = tokenAmount
 		}
 
 		inputAmount, outputAmount = amount, amounts[len(amounts)-1]
 	} else {
 		amounts[len(amounts)-1] = amount
 		for i := len(route.Path) - 1; i > 0; i-- {
-			tokenAmount, nextPair, err := route.Pairs[i-1].GetInputAmount(amounts[i])
+			tokenAmount, err := route.Pairs[i-1].GetInputAmount(amounts[i])
 			if err != nil {
 				return nil, err
 			}
 
-			amounts[i-1], nextPairs[i-1] = tokenAmount, nextPair
+			amounts[i-1] = tokenAmount
 		}
 
 		outputAmount, inputAmount = amount, amounts[0]
@@ -182,7 +181,7 @@ func getBestTradeExactIn(
 			continue
 		}
 
-		amountOut, _, err := pair.GetOutputAmount(tokenAmountIn)
+		amountOut, err := pair.GetOutputAmount(tokenAmountIn)
 		if err != nil {
 			if err == ErrInsufficientReserve {
 				continue
@@ -262,7 +261,7 @@ func getBestTradeExactOut(
 			continue
 		}
 
-		amountIn, _, err := pair.GetInputAmount(amountOut)
+		amountIn, err := pair.GetInputAmount(amountOut)
 		if err != nil {
 			if err == ErrInsufficientReserve {
 				continue

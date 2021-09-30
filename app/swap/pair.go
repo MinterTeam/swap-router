@@ -19,9 +19,14 @@ func NewPair(tokenAmountA TokenAmount, tokenAmountB TokenAmount) *PairTrade {
 	}
 }
 
-func (p PairTrade) GetOutputAmount(inputAmount TokenAmount) (TokenAmount, *PairTrade, error) {
+var (
+	c998  = big.NewInt(998)
+	c1000 = big.NewInt(1000)
+)
+
+func (p PairTrade) GetOutputAmount(inputAmount TokenAmount) (TokenAmount, error) {
 	if p.getReserve0().Cmp(big.NewInt(0)) == 0 || p.getReserve1().Cmp(big.NewInt(0)) == 0 {
-		return TokenAmount{}, nil, ErrInsufficientReserve
+		return TokenAmount{}, ErrInsufficientReserve
 	}
 
 	inputReserve := p.getReserveOf(inputAmount.Token)
@@ -30,21 +35,21 @@ func (p PairTrade) GetOutputAmount(inputAmount TokenAmount) (TokenAmount, *PairT
 		outputReserve = p.Token1
 	}
 
-	inputAmountWithFee := new(big.Int).Mul(inputAmount.Amount, big.NewInt(998))
+	inputAmountWithFee := new(big.Int).Mul(inputAmount.Amount, c998)
 	numerator := new(big.Int).Mul(inputAmountWithFee, outputReserve.Amount)
-	denominator := new(big.Int).Add(new(big.Int).Mul(inputReserve.Amount, big.NewInt(1000)), inputAmountWithFee)
+	denominator := new(big.Int).Add(new(big.Int).Mul(inputReserve.Amount, c1000), inputAmountWithFee)
 
 	outputAmount := TokenAmount{
 		Token:  outputReserve.Token,
 		Amount: new(big.Int).Div(numerator, denominator),
 	}
 
-	return outputAmount, NewPair(inputReserve.add(inputAmount), outputReserve.sub(outputAmount)), nil
+	return outputAmount, nil
 }
 
-func (p PairTrade) GetInputAmount(outputAmount TokenAmount) (TokenAmount, *PairTrade, error) {
+func (p PairTrade) GetInputAmount(outputAmount TokenAmount) (TokenAmount, error) {
 	if p.getReserve0().Cmp(big.NewInt(0)) == 0 || p.getReserve1().Cmp(big.NewInt(0)) == 0 || p.getReserveOf(outputAmount.Token).Amount.Cmp(outputAmount.Amount) == -1 {
-		return TokenAmount{}, nil, ErrInsufficientReserve
+		return TokenAmount{}, ErrInsufficientReserve
 	}
 
 	outputReserve := p.getReserveOf(outputAmount.Token)
@@ -53,8 +58,8 @@ func (p PairTrade) GetInputAmount(outputAmount TokenAmount) (TokenAmount, *PairT
 		inputReserve = p.Token1
 	}
 
-	numerator := new(big.Int).Mul(new(big.Int).Mul(inputReserve.Amount, outputAmount.Amount), big.NewInt(1000))
-	denominator := new(big.Int).Mul(new(big.Int).Sub(outputReserve.Amount, outputAmount.Amount), big.NewInt(998))
+	numerator := new(big.Int).Mul(new(big.Int).Mul(inputReserve.Amount, outputAmount.Amount), c1000)
+	denominator := new(big.Int).Mul(new(big.Int).Sub(outputReserve.Amount, outputAmount.Amount), c998)
 
 	amount := big.NewInt(0)
 	if denominator.Cmp(amount) != 0 {
@@ -66,7 +71,7 @@ func (p PairTrade) GetInputAmount(outputAmount TokenAmount) (TokenAmount, *PairT
 		Amount: amount,
 	}
 
-	return inputAmount, NewPair(inputReserve.add(inputAmount), outputReserve.sub(outputAmount)), nil
+	return inputAmount, nil
 }
 
 func (p PairTrade) getReserve0() *big.Int {
