@@ -25,7 +25,7 @@ var (
 )
 
 func (p PairTrade) GetOutputAmount(inputAmount TokenAmount) (TokenAmount, error) {
-	if p.getReserve0().Cmp(big.NewInt(0)) == 0 || p.getReserve1().Cmp(big.NewInt(0)) == 0 {
+	if p.getReserve0().Sign() == 0 || p.getReserve1().Sign() == 0 {
 		return TokenAmount{}, ErrInsufficientReserve
 	}
 

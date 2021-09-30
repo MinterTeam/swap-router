@@ -18,17 +18,3 @@ func (ta TokenAmount) GetAmount() *big.Int {
 func (ta TokenAmount) GetCurrency() Token {
 	return ta.Token
 }
-
-func (ta TokenAmount) add(other TokenAmount) TokenAmount {
-	return TokenAmount{
-		Token:  ta.Token,
-		Amount: new(big.Int).Add(ta.Amount, other.Amount),
-	}
-}
-
-func (ta TokenAmount) sub(other TokenAmount) TokenAmount {
-	return TokenAmount{
-		Token:  ta.Token,
-		Amount: new(big.Int).Sub(ta.Amount, other.Amount),
-	}
-}

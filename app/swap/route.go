@@ -5,7 +5,6 @@ type Route struct {
 	Path     []Token
 	Input    Token
 	Output   Token
-	MidPrice Price
 }
 
 func NewRoute(pairs []*PairTrade, input Token, output *Token) Route {
@@ -32,8 +31,6 @@ func NewRoute(pairs []*PairTrade, input Token, output *Token) Route {
 		Input:  input,
 		Output: *output,
 	}
-
-	route.MidPrice = NewPriceFromRoute(route)
 
 	return route
 }

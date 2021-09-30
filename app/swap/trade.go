@@ -1,8 +1,6 @@
 package swap
 
 import (
-	"github.com/MinterTeam/minter-explorer-api/v2/helpers"
-	"github.com/ethereum/go-ethereum/params"
 	"math/big"
 )
 
@@ -18,7 +16,6 @@ type Trade struct {
 	TradeType    TradeType
 	InputAmount  TokenAmount
 	OutputAmount TokenAmount
-	PriceImpact  *big.Int
 }
 
 func NewTrade(route Route, amount TokenAmount, tradeType TradeType) (*Trade, error) {
@@ -60,54 +57,7 @@ func NewTrade(route Route, amount TokenAmount, tradeType TradeType) (*Trade, err
 		TradeType:    tradeType,
 		InputAmount:  inputAmount,
 		OutputAmount: outputAmount,
-		PriceImpact:  computePriceImpact(route.MidPrice, inputAmount, outputAmount),
 	}, nil
-}
-
-func computePriceImpact(midPrice Price, inputAmount TokenAmount, outputAmount TokenAmount) *big.Int {
-	mid := helpers.Pip2Bip(midPrice.Value)
-	input := helpers.Pip2Bip(inputAmount.GetAmount())
-	output := helpers.Pip2Bip(outputAmount.GetAmount())
-
-	exactQuote := new(big.Float).Mul(mid, input)
-	numerator := new(big.Float).Sub(exactQuote, output)
-	slippage := new(big.Float).Quo(numerator, exactQuote)
-
-	wei := new(big.Int)
-	new(big.Float).Mul(slippage, big.NewFloat(params.Ether)).Int(wei)
-
-	return wei
-}
-
-func (t *Trade) GetMaximumAmountIn(slippageTolerance float64) TokenAmount {
-	if t.TradeType == TradeTypeExactInput {
-		return t.InputAmount
-	}
-
-	maximumAmountIn := new(big.Int)
-	inputAmount := new(big.Float).SetInt(t.InputAmount.GetAmount())
-	percent := big.NewFloat(1 + slippageTolerance)
-	new(big.Float).Mul(inputAmount, percent).Int(maximumAmountIn)
-
-	return NewTokenAmount(t.InputAmount.Token, maximumAmountIn)
-}
-
-func (t *Trade) GetMinimumAmountOut(slippageTolerance float64) TokenAmount {
-	if t.TradeType == TradeTypeExactOutput {
-		return t.OutputAmount
-	}
-
-	minimumAmountOut := new(big.Int)
-	outputAmount := new(big.Float).SetInt(t.OutputAmount.GetAmount())
-	percent := big.NewFloat(1 + slippageTolerance)
-	new(big.Float).Quo(outputAmount, percent).Int(minimumAmountOut)
-
-	return NewTokenAmount(t.InputAmount.Token, minimumAmountOut)
-}
-
-type TradeOptions struct {
-	MaxNumResults int
-	MaxHops       int
 }
 
 func inputOutputComparator(tradeA, tradeB *Trade) int {
@@ -136,13 +86,6 @@ func tradeComparator(tradeA, tradeB *Trade) bool {
 	ioComp := inputOutputComparator(tradeA, tradeB)
 	if ioComp != 0 {
 		return ioComp == 1
-	}
-
-	// consider lowest slippage next, since these are less likely to fail
-	if tradeA.PriceImpact.Cmp(tradeB.PriceImpact) == -1 {
-		return true
-	} else if tradeA.PriceImpact.Cmp(tradeB.PriceImpact) == 1 {
-		return false
 	}
 
 	// finally consider the number of hops since each hop costs gas
