@@ -21,5 +21,5 @@ func (req *FindSwapPoolRouteRequestQuery) GetAmount() *big.Int {
 }
 
 func (req *FindSwapPoolRouteRequestQuery) GetTradeType() swap.TradeType {
-	return helpers.Str2TradeType(req.TradeType)
+	return swap.Str2TradeType(req.TradeType)
 }

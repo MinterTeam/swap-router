@@ -1,14 +1,14 @@
 package swap
 
 type Route struct {
-	Pairs    []*PairTrade
-	Path     []Token
-	Input    Token
-	Output   Token
+	Pairs  []*PairTrade
+	Path   []Token
+	Input  Token
+	Output Token
 }
 
 func NewRoute(pairs []*PairTrade, input Token, output *Token) Route {
-	path := make([]Token, len(pairs) + 1)
+	path := make([]Token, len(pairs)+1)
 	path[0] = input
 
 	for i, pair := range pairs {

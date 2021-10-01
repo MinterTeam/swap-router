@@ -56,6 +56,44 @@ func NewTrade(route Route, amount TokenAmount, tradeType TradeType) (*Trade, err
 	}, nil
 }
 
+func NewAccurateTrade(route Route, amount TokenAmount, tradeType TradeType) (*Trade, error) {
+	amounts := make([]TokenAmount, len(route.Path))
+
+	var inputAmount, outputAmount TokenAmount
+	if tradeType == TradeTypeExactInput {
+		amounts[0] = amount
+		for i := 0; i < len(route.Path)-1; i++ {
+			tokenAmount, err := route.Pairs[i].GetOutputAmountInPip(amounts[i])
+			if err != nil {
+				return nil, err
+			}
+
+			amounts[i+1] = tokenAmount
+		}
+
+		inputAmount, outputAmount = amount, amounts[len(amounts)-1]
+	} else {
+		amounts[len(amounts)-1] = amount
+		for i := len(route.Path) - 1; i > 0; i-- {
+			tokenAmount, err := route.Pairs[i-1].GetInputAmountInPip(amounts[i])
+			if err != nil {
+				return nil, err
+			}
+
+			amounts[i-1] = tokenAmount
+		}
+
+		outputAmount, inputAmount = amount, amounts[0]
+	}
+
+	return &Trade{
+		Route:        route,
+		TradeType:    tradeType,
+		InputAmount:  inputAmount,
+		OutputAmount: outputAmount,
+	}, nil
+}
+
 func inputOutputComparator(tradeA, tradeB *Trade) int {
 	if tradeA.OutputAmount.GetAmount() == tradeB.OutputAmount.GetAmount() {
 		if tradeA.InputAmount.GetAmount() == tradeB.InputAmount.GetAmount() {
@@ -93,7 +131,12 @@ func tradeComparator(tradeA, tradeB *Trade) bool {
 }
 
 func GetBestTradeExactIn(pairs []*PairTrade, currencyOut Token, currencyAmountIn TokenAmount, maxHops int) (*Trade, error) {
-	return getBestTradeExactIn(pairs, currencyOut, currencyAmountIn, maxHops, make([]*PairTrade, 0), currencyAmountIn, nil)
+	trade, err := getBestTradeExactIn(pairs, currencyOut, currencyAmountIn, maxHops, make([]*PairTrade, 0), currencyAmountIn, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewAccurateTrade(trade.Route, currencyAmountIn, TradeTypeExactInput)
 }
 
 func getBestTradeExactIn(
@@ -173,7 +216,12 @@ func getBestTradeExactIn(
 }
 
 func GetBestTradeExactOut(pairs []*PairTrade, currencyIn Token, amountOut TokenAmount, maxhops int) (*Trade, error) {
-	return getBestTradeExactOut(pairs, currencyIn, amountOut, maxhops, make([]*PairTrade, 0), amountOut, nil)
+	trade, err := getBestTradeExactOut(pairs, currencyIn, amountOut, maxhops, make([]*PairTrade, 0), amountOut, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewAccurateTrade(trade.Route, amountOut, TradeTypeExactOutput)
 }
 
 func getBestTradeExactOut(

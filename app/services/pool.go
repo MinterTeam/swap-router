@@ -3,7 +3,6 @@ package services
 import (
 	"github.com/MinterTeam/minter-explorer-api/v2/blocks"
 	"github.com/MinterTeam/minter-explorer-extender/v2/models"
-	"github.com/MinterTeam/swap-router/app/helpers"
 	"github.com/MinterTeam/swap-router/app/repositories"
 	"github.com/MinterTeam/swap-router/app/swap"
 	log "github.com/sirupsen/logrus"
@@ -37,8 +36,8 @@ func (p *Pool) updateTradePairs() {
 	pairs := make([]*swap.PairTrade, len(p.pools))
 	for i, pool := range p.pools {
 		pairs[i] = swap.NewPair(
-			swap.NewTokenAmount(swap.NewToken(pool.FirstCoinId), helpers.PipStr2Bip(pool.FirstCoinVolume)),
-			swap.NewTokenAmount(swap.NewToken(pool.SecondCoinId), helpers.PipStr2Bip(pool.SecondCoinVolume)),
+			swap.NewTokenAmount(swap.NewToken(pool.FirstCoinId), pool.FirstCoinVolume),
+			swap.NewTokenAmount(swap.NewToken(pool.SecondCoinId), pool.SecondCoinVolume),
 		)
 	}
 

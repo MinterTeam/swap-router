@@ -3,7 +3,6 @@ package services
 import (
 	"errors"
 	"github.com/MinterTeam/swap-router/app/config"
-	"github.com/MinterTeam/swap-router/app/helpers"
 	"github.com/MinterTeam/swap-router/app/swap"
 	"github.com/MinterTeam/swap-router/app/types"
 	"math/big"
@@ -60,9 +59,9 @@ func (s *Swap) findRoute(fromCoinId uint64, toCoinId uint64, tradeType swap.Trad
 func (s *Swap) FindRoute(fromCoinId uint64, toCoinId uint64, tradeType swap.TradeType, amount string) (trade *swap.Trade, err error) {
 	pairs, trade := s.poolService.GetTradePairs(), &swap.Trade{}
 	if tradeType == swap.TradeTypeExactInput {
-		trade, err = swap.GetBestTradeExactIn(pairs, swap.NewToken(toCoinId), swap.NewTokenAmount(swap.NewToken(fromCoinId), helpers.PipStr2Bip(amount)), 4)
+		trade, err = swap.GetBestTradeExactIn(pairs, swap.NewToken(toCoinId), swap.NewTokenAmount(swap.NewToken(fromCoinId), amount), 4)
 	} else {
-		trade, err = swap.GetBestTradeExactOut(pairs, swap.NewToken(fromCoinId), swap.NewTokenAmount(swap.NewToken(toCoinId), helpers.PipStr2Bip(amount)), 4)
+		trade, err = swap.GetBestTradeExactOut(pairs, swap.NewToken(fromCoinId), swap.NewTokenAmount(swap.NewToken(toCoinId), amount), 4)
 	}
 
 	if err != nil {
