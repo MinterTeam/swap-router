@@ -57,7 +57,7 @@ func (api *Api) FindSwapRoute(c *gin.Context) {
 		path[i] = coin
 	}
 
-	rlog.Debug("router: result created")
+	rlog.DebugWith("router: result created ", trade.Route.Path)
 
 	c.JSON(http.StatusOK, new(resources.Route).Transform(path, trade))
 }

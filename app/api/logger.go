@@ -22,3 +22,7 @@ func newRequestLogger(c *gin.Context) *requestLogger {
 func (r *requestLogger) Debug(text string) {
 	r.log.WithField("t", time.Since(r.log.Context.Value("time").(time.Time))).Debug(text)
 }
+
+func (r *requestLogger) DebugWith(text string, data interface{}) {
+	r.log.WithField("t", time.Since(r.log.Context.Value("time").(time.Time))).WithField("data", data).Debug(text)
+}
