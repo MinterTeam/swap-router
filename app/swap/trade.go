@@ -1,5 +1,7 @@
 package swap
 
+import "errors"
+
 type TradeType int
 
 const (
@@ -136,6 +138,10 @@ func GetBestTradeExactIn(pairs []*PairTrade, currencyOut Token, currencyAmountIn
 		return nil, err
 	}
 
+	if trade == nil {
+		return nil, errors.New("path not found")
+	}
+
 	return NewAccurateTrade(trade.Route, currencyAmountIn, TradeTypeExactInput)
 }
 
@@ -219,6 +225,10 @@ func GetBestTradeExactOut(pairs []*PairTrade, currencyIn Token, amountOut TokenA
 	trade, err := getBestTradeExactOut(pairs, currencyIn, amountOut, maxhops, make([]*PairTrade, 0), amountOut, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	if trade == nil {
+		return nil, errors.New("path not found")
 	}
 
 	return NewAccurateTrade(trade.Route, amountOut, TradeTypeExactOutput)
