@@ -34,14 +34,18 @@ func main() {
 	coinRepository := repositories.NewCoinRepository(db)
 	coinService := services.NewCoinService(coinRepository)
 
-	wsClient := ws.NewWebSocketClient(cfg.WsConfig.Server)
-	wsSub := wsClient.CreateSubscription("blocks")
-	wsClient.Subscribe(wsSub)
-	blocksListener := ws.NewBlocksChannelHandler()
-	blocksListener.AddSubscriber(poolService)
-	blocksListener.AddSubscriber(coinService)
-	wsSub.OnPublish(blocksListener)
-	defer wsClient.Close()
+	go func() {
+		wsClient := ws.NewWebSocketClient(cfg.WsConfig.Server)
+		wsSub := wsClient.CreateSubscription("blocks")
+		wsClient.Subscribe(wsSub)
+		blocksListener := ws.NewBlocksChannelHandler()
+		blocksListener.AddSubscriber(poolService)
+		blocksListener.AddSubscriber(coinService)
+		wsSub.OnPublish(blocksListener)
+		defer wsClient.Close()
+
+		select {}
+	}()
 
 	api.NewApi(cfg.ApiConfig, swapService, coinService)
 }
