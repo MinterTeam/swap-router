@@ -88,6 +88,10 @@ func NewAccurateTrade(route Route, amount TokenAmount, tradeType TradeType) (*Tr
 		outputAmount, inputAmount = amount, amounts[0]
 	}
 
+	if outputAmount.GetAmountInPip().Sign() != 1 || inputAmount.GetAmountInPip().Sign() != 1 {
+		return nil, nil
+	}
+
 	return &Trade{
 		Route:        route,
 		TradeType:    tradeType,
