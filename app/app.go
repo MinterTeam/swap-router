@@ -25,8 +25,12 @@ func main() {
 	log.Debugf("num of cpu: %d", runtime.NumCPU())
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
+	log.Debug("loading config...")
+
 	cfg := config.Load()
 	db := database.Connect(cfg.DbConfig)
+
+	log.Debug("starting services...")
 
 	poolRepository := repositories.NewPoolRepository(db)
 	poolService := services.NewPoolService(poolRepository)
