@@ -29,6 +29,8 @@ func (p *Pool) updatePools() {
 		return
 	}
 
+	log.Debug("pools updated")
+
 	p.pools = pools
 }
 
