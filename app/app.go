@@ -30,9 +30,12 @@ func main() {
 
 	poolRepository := repositories.NewPoolRepository(db)
 	poolService := services.NewPoolService(poolRepository)
+	log.Debugf("pool service started")
 	swapService := services.NewSwapService(cfg.WorkersConfig, poolService)
+	log.Debugf("swap service started")
 	coinRepository := repositories.NewCoinRepository(db)
 	coinService := services.NewCoinService(coinRepository)
+	log.Debugf("coin service started")
 
 	go func() {
 		wsClient := ws.NewWebSocketClient(cfg.WsConfig.Server)
