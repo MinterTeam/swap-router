@@ -35,7 +35,7 @@ func (p PairTrade) GetOutputAmount(inputAmount TokenAmount) (TokenAmount, error)
 		outputReserve = p.Token1
 	}
 
-	inputAmountWithFee := inputAmount.Amount * 998
+	inputAmountWithFee := inputAmount.Amount * 997
 	numerator := inputAmountWithFee * outputReserve.Amount
 	denominator := (inputReserve.Amount * 1000) + inputAmountWithFee
 

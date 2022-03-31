@@ -1,0 +1,48 @@
+name: Swap router
+
+on:
+  push:
+    branches: [ toronet ]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 5
+
+      - name: Build & Push to Docker registry
+        uses: opspresso/action-docker@v0.2.13
+        env:
+          USERNAME: ${{ secrets.MINTER_REGISTRY_USERNAME }}
+          PASSWORD: ${{ secrets.MINTER_REGISTRY_PASSWORD }}
+          REGISTRY: "registry.minter.network"
+          IMAGE_NAME: "swap-router-toronet"
+          DOCKERFILE: ".docker/Dockerfile"
+          LATEST: "true"
+          TAG_NAME: ${{ github.sha }}
+
+      - name: DigitalOcean Kubernetes
+        uses: matootie/dokube@master
+        with:
+          personalAccessToken: ${{ secrets.DIGITALOCEAN_TOKEN }}
+          clusterName: k8s-prod-do
+
+      - name: Install helm
+        run: wget https://get.helm.sh/helm-v3.3.4-linux-amd64.tar.gz &> /dev/null && tar xvzf helm-v3.3.4-linux-amd64.tar.gz && chmod 777 linux-amd64/helm && ./linux-amd64/helm ls -n toronet
+
+      - name: Deploy to DO
+        env:
+          TAG_NAME: ${{ github.sha }}
+        run: ./linux-amd64/helm upgrade -n toronet -i swap-router-api chart/ --atomic --timeout 60s --reuse-values --set image.tag=$TAG_NAME
+
+      - name: notification
+        if: cancelled() == false
+        uses: xinthink/action-telegram@v1.1
+        with:
+          botToken: ${{ secrets.TELEGRAM_CI_TOKEN }}
+          chatId: ${{ secrets.TELEGRAM_CI_PROD_TO }}
+          jobStatus: ${{ job.status }}
+          skipSuccess: false
