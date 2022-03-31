@@ -36,7 +36,7 @@ jobs:
       - name: Deploy to DO
         env:
           TAG_NAME: ${{ github.sha }}
-        run: ./linux-amd64/helm upgrade -n toronet -i swap-router-api chart/ --atomic --timeout 60s --reuse-values --set image.tag=$TAG_NAME
+        run: ./linux-amd64/helm upgrade -n toronet -i swap-router-api chart/ --atomic --timeout 50s --reuse-values --set image.tag=$TAG_NAME
 
       - name: notification
         if: cancelled() == false
