@@ -169,6 +169,10 @@ func getBestTradeExactIn(
 			continue
 		}
 
+		if maxHops == 1 && !pair.Token0.Token.IsEqual(tokenOut) && !pair.Token1.Token.IsEqual(tokenOut) {
+			continue
+		}
+
 		if pair.getReserve0() <= 0 || pair.getReserve1() <= 0 {
 			continue
 		}
@@ -255,6 +259,10 @@ func getBestTradeExactOut(
 
 	for i, pair := range pairs {
 		if !pair.Token0.Token.IsEqual(amountOut.Token) && !pair.Token1.Token.IsEqual(amountOut.Token) {
+			continue
+		}
+
+		if maxHops == 1 && !pair.Token0.Token.IsEqual(tokenIn) && !pair.Token1.Token.IsEqual(tokenIn) {
 			continue
 		}
 
